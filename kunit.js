@@ -12,12 +12,9 @@ K = function(selector, context){
 
 // Constructor
 jQuery.extend(K, (function() {
-    var _window;
-
     var _queue = [];
     var _queuePos = 0;
     var _next;
-    var _speed = 500;
     var _incallback = false;
 
     var _add = function(handler) {
@@ -63,11 +60,11 @@ jQuery.extend(K, (function() {
             _queuePos = 0;
 
             setTimeout(function() {
-                _next.nextTimer = setTimeout(_timeoutCallback, _next.timeout + _speed);
+                _next.nextTimer = setTimeout(_timeoutCallback, _next.timeout + K.timeBetweenOpen);
 
                _open(_next.src,
                      _successCallback);
-            }, _speed);
+            }, K.timeBetweenOpen);
         } else {
             setTimeout(start, 0);
         }
@@ -107,37 +104,39 @@ jQuery.extend(K, (function() {
             K.window.location = src;
         } else {
             K.window = window.open(src, 'kunit');
-            K.$(K.window).bind({
-                'unload': onunload
-            });
-            if ('readyState' in K.window.document) {
-                if ('onreadystatechange' in K.window.document) {
-                    K.window.document.onreadystatechange = checkreadystate;
-                } else {
-                    readyStateInterval = setInterval(function() {
-                        if (!K.window.document) {
-                            return;
-                        }
+        }
 
-                        checkreadystate();
-                    }, 200);
-                }
+        K.$(K.window).bind({
+            'unload': onunload
+        });
+        if ('readyState' in K.window.document) {
+            if ('onreadystatechange' in K.window.document) {
+                K.window.document.onreadystatechange = checkreadystate;
             } else {
-                K.$(K.window).bind({
-                    'load': onload
-                });
+                readyStateInterval = setInterval(function() {
+                    if (!K.window.document) {
+                        return;
+                    }
+
+                    checkreadystate();
+                }, 200);
             }
+        } else {
+            K.$(K.window).bind({
+                'load': onload
+            });
         }
     };
 
     var _$ = jQuery.noConflict();
 
     return {
-        '$': _$,
+        '$': jQuery.noConflict(),
 
-        'window': _window,
+        'timeBetweenOpen': 200,
 
         'open': function(src, callback, timeout) {
+            stop();
             if (typeof callback !== 'function') {
                 timeout = callback;
                 callback = undefined;

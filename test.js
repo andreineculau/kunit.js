@@ -9,5 +9,5 @@ test('that everything is fine', function() {
 });
 
 test('that there is content', function() {
-    ok(K('body *').size(), 'yes there is');
+    ok(K('#qunit-header').size(), 'yes there is');
 });
