@@ -128,10 +128,31 @@ jQuery.extend(K, (function() {
         }
     };
 
-    var _$ = jQuery.noConflict();
-
     return {
         '$': jQuery.noConflict(),
+
+        /**
+         * Wrapper for Syn, with predefined context = K.window.document.body
+         * {@link Syn} is a synthetic event generator
+         * @see http://jupiterjs.com/news/syn-a-standalone-synthetic-event-library
+         */
+        'syn': (function() {
+            var result = {};
+            jQuery.each(Syn, function(methodName, method) {
+                if (typeof method === 'function') {
+                    result[methodName] = function() {
+                        var args = [];
+                        jQuery.each(arguments, function() {
+                            args.push(this);
+                        });
+                        args[0] = args[0]?args[0]:{};
+                        args[1] = K.window.document.body;
+                        method.apply(Syn, args);
+                    };
+                }
+            });
+            return result;
+        })(),
 
         'timeBetweenOpen': 200,
 
@@ -151,3 +172,20 @@ jQuery.extend(K, (function() {
         }
     };
 })());
+
+(function() {
+    var unserialize = function(str){
+        var chunks = str.split("&");
+        var obj = {};
+        jQuery.each(chunks, function(key, value) {
+            var spl = value.split("=");
+            obj[spl[0]] = spl[1];
+        });
+        return obj;
+    };
+
+    var hash = unserialize(window.location.search.slice(1));
+    var script = document.createElement('SCRIPT');
+    script.setAttribute('src', hash.test);
+    window.document.getElementsByTagName('head')[0].appendChild(script);
+})();
