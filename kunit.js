@@ -119,7 +119,10 @@ jQuery.extend(kunit, (function(window, document, $) {
             'unload': onunload
         });
         if ('readyState' in self.window.document) {
-            if ('onreadystatechange' in self.window.document) {
+            if ('onreadystatechange' in self.window.document &&
+                !$.browser.webkit // In webkit document.onreadystatechange is
+                                  // never triggered.
+               ) {
                 self.window.document.onreadystatechange = checkreadystate;
             } else {
                 readyStateInterval = setInterval(function() {
