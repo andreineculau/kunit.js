@@ -1,4 +1,8 @@
-kunit = function(selector, context){
+/*global jQuery: true, window: true, Syn: true*/
+/*global ok: true, start: true, stop: true*/ // QUnit functions
+/*jslint browser:true, eqeqeq: true*/
+
+var kunit = function(selector, context){
     if(selector && selector.kunit === true){
         return selector;
     }
@@ -12,15 +16,17 @@ kunit = function(selector, context){
 };
 
 // Constructor
-jQuery.extend(kunit, (function() {
-    var self = kunit;
+jQuery.extend(kunit, (function(window, document, $) {
+    "use strict";
+    var self, _queue, _queuePos, _next, _incallback,
+        _add, _successCallback, _timeoutCallback, _done, _open;
 
-    var _queue = [];
-    var _queuePos = 0;
-    var _next;
-    var _incallback = false;
+    self = kunit;
+    _queue = [];
+    _queuePos = 0;
+    _incallback = false;
 
-    var _add = function(handler) {
+    _add = function(handler) {
         if (_incallback) {
             _queue.splice(_queuePos, 0, handler);
             _queuePos++;
@@ -28,12 +34,12 @@ jQuery.extend(kunit, (function() {
             _queue.push(handler);
         }
 
-        if (_queue.length == 1 && !_incallback) {
+        if (_queue.length === 1 && !_incallback) {
             setTimeout(_done, 0);
         }
     };
 
-    var _successCallback = function() {
+    _successCallback = function() {
         _incallback = true;
         clearTimeout(_next.nextTimer);
 
@@ -44,7 +50,7 @@ jQuery.extend(kunit, (function() {
         _done();
     };
 
-    var _timeoutCallback = function() {
+    _timeoutCallback = function() {
         _incallback = true;
         clearTimeout(_next.nextTimer);
         ok(false, 'Page ' + _next.src + ' did not load in time!');
@@ -57,48 +63,48 @@ jQuery.extend(kunit, (function() {
         _done();
     };
 
-    var _done = function() {
+    _done = function() {
         if (_queue.length) {
             _next = _queue.shift();
             _queuePos = 0;
 
             setTimeout(function() {
-                _next.nextTimer = setTimeout(_timeoutCallback, _next.timeout + self.timeBetweenOpen);
+                _next.nextTimer = setTimeout(_timeoutCallback, _next.timeout +
+                                             self.timeBetweenOpen);
 
-               _open(_next.src,
-                     _successCallback);
-            }, self.timeBetweenOpen);
+               _open(_next.src, _successCallback);
+            }, _queue.length === 0 ? 0 : self.timeBetweenOpen);
         } else {
             setTimeout(start, 0);
         }
     };
 
-    var _open = function(src, successCallback) {
-        var readyStateInterval;
+    _open = function(src, successCallback) {
+        var readyStateInterval, onload, onunload, checkreadystate;
 
-        var onload = function(e) {
+        onload = function(e) {
             clearInterval(readyStateInterval);
             self.window.document.documentElement.tabIndex = 0;
             setTimeout(function() {
                 self.window.focus();
             }, 0);
-            jQuery(self.window).unbind({
+            $(self.window).unbind({
                 'load': onload
             });
             _successCallback();
         };
 
-        var onunload = function(e) {
-            jQuery(self.window).unbind({
+        onunload = function(e) {
+            $(self.window).unbind({
                 'load': onload,
                 'unload': onunload
             });
         };
 
-        var checkreadystate = function() {
-            if ((self.window.document.readyState == 'complete' ||
-                 self.window.document.readyState == 'loaded') &&
-                self.window.location.href != 'about:blank') {
+        checkreadystate = function() {
+            if ((self.window.document.readyState === 'complete' ||
+                 self.window.document.readyState === 'loaded') &&
+                self.window.location.href !== 'about:blank') {
                 onload();
             }
         };
@@ -109,7 +115,7 @@ jQuery.extend(kunit, (function() {
             self.window = window.open(src, 'kunit');
         }
 
-        jQuery(self.window).bind({
+        $(self.window).bind({
             'unload': onunload
         });
         if ('readyState' in self.window.document) {
@@ -125,14 +131,14 @@ jQuery.extend(kunit, (function() {
                 }, 200);
             }
         } else {
-            jQuery(self.window).bind({
+            $(self.window).bind({
                 'load': onload
             });
         }
     };
 
     return {
-        '$': jQuery.noConflict(),
+        '$': $.noConflict(),
 
         /**
          * Wrapper for Syn, with predefined context = self.window.document.body
@@ -141,11 +147,11 @@ jQuery.extend(kunit, (function() {
          */
         'syn': (function() {
             var result = {};
-            jQuery.each(Syn, function(methodName, method) {
+            $.each(Syn, function(methodName, method) {
                 if (typeof method === 'function') {
                     result[methodName] = function() {
                         var args = [];
-                        jQuery.each(arguments, function() {
+                        $.each(arguments, function() {
                             args.push(this);
                         });
                         args[0] = args[0]?args[0]:{};
@@ -157,8 +163,18 @@ jQuery.extend(kunit, (function() {
             return result;
         })(),
 
-        'timeBetweenOpen': 200,
+        /**
+         * The time (ms) between test execution.
+         * @attribute
+         */
+        'timeBetweenOpen': 100,
 
+        /**
+         * Open a new window / tab where the testcase at src is run.
+         * @param {String} src URL of testcase (js file)
+         * @param {String} callback function to execute when loaded with success
+         * @param {Number} timeout Time (ms) to wait before load fail error
+         */
         'open': function(src, callback, timeout) {
             stop();
             if (typeof callback !== 'function') {
@@ -174,21 +190,20 @@ jQuery.extend(kunit, (function() {
             });
         }
     };
-})());
+})(window, document, jQuery));
 
 (function() {
-    var unserialize = function(str){
-        var chunks = str.split("&");
-        var obj = {};
+    var unserialize, hash, script;
+    unserialize = function(str){
+        var obj = {}, chunks = str.split("&");
         kunit.$.each(chunks, function(key, value) {
             var spl = value.split("=");
-            obj[spl[0]] = spl[1];
+            obj[spl[0]] = decodeURIComponent(spl[1]);
         });
         return obj;
     };
-
-    var hash = unserialize(window.location.search.slice(1));
-    var script = document.createElement('SCRIPT');
+    hash = unserialize(window.location.search.slice(1));
+    script = document.createElement('SCRIPT');
     script.setAttribute('src', hash.test);
     window.document.getElementsByTagName('head')[0].appendChild(script);
 })();
