@@ -167,7 +167,7 @@ jQuery.extend(kunit, (function(window, document, $) {
         })(),
 
         /**
-         * The time (ms) between test execution.
+         * The time (ms) between opening .
          * @attribute
          */
         'timeBetweenOpen': 100,
@@ -188,7 +188,7 @@ jQuery.extend(kunit, (function(window, document, $) {
                 'src': src,
                 //'callbackScope': null,
                 'successCallback': callback,
-                'timeout': timeout || 30000
+                'timeout': timeout || 5000
                 //'timeoutCallback': function() {}
             });
         }
