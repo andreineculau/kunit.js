@@ -1,3 +1,5 @@
+var K = kunit;
+
 module('a', {
     setup: function() {
         K.open('test.run.html');

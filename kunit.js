@@ -1,17 +1,20 @@
-K = function(selector, context){
+kunit = function(selector, context){
     if(selector && selector.kunit === true){
         return selector;
     }
+    var self = kunit;
 
     // Extend with selector methods
-    context = context?context:K.window.document;
+    context = context?context:self.window.document;
     return jQuery.extend({
         'kunit': true
     }, jQuery(selector, context));
 };
 
 // Constructor
-jQuery.extend(K, (function() {
+jQuery.extend(kunit, (function() {
+    var self = kunit;
+
     var _queue = [];
     var _queuePos = 0;
     var _next;
@@ -60,11 +63,11 @@ jQuery.extend(K, (function() {
             _queuePos = 0;
 
             setTimeout(function() {
-                _next.nextTimer = setTimeout(_timeoutCallback, _next.timeout + K.timeBetweenOpen);
+                _next.nextTimer = setTimeout(_timeoutCallback, _next.timeout + self.timeBetweenOpen);
 
                _open(_next.src,
                      _successCallback);
-            }, K.timeBetweenOpen);
+            }, self.timeBetweenOpen);
         } else {
             setTimeout(start, 0);
         }
@@ -75,46 +78,46 @@ jQuery.extend(K, (function() {
 
         var onload = function(e) {
             clearInterval(readyStateInterval);
-            K.window.document.documentElement.tabIndex = 0;
+            self.window.document.documentElement.tabIndex = 0;
             setTimeout(function() {
-                K.window.focus();
+                self.window.focus();
             }, 0);
-            K.$(K.window).unbind({
+            jQuery(self.window).unbind({
                 'load': onload
             });
             _successCallback();
         };
 
         var onunload = function(e) {
-            K.$(K.window).unbind({
+            jQuery(self.window).unbind({
                 'load': onload,
                 'unload': onunload
             });
         };
 
         var checkreadystate = function() {
-            if ((K.window.document.readyState == 'complete' ||
-                 K.window.document.readyState == 'loaded') &&
-                K.window.location.href != 'about:blank') {
+            if ((self.window.document.readyState == 'complete' ||
+                 self.window.document.readyState == 'loaded') &&
+                self.window.location.href != 'about:blank') {
                 onload();
             }
         };
 
-        if (K.window) {
-            K.window.location = src;
+        if (self.window) {
+            self.window.location = src;
         } else {
-            K.window = window.open(src, 'kunit');
+            self.window = window.open(src, 'kunit');
         }
 
-        K.$(K.window).bind({
+        jQuery(self.window).bind({
             'unload': onunload
         });
-        if ('readyState' in K.window.document) {
-            if ('onreadystatechange' in K.window.document) {
-                K.window.document.onreadystatechange = checkreadystate;
+        if ('readyState' in self.window.document) {
+            if ('onreadystatechange' in self.window.document) {
+                self.window.document.onreadystatechange = checkreadystate;
             } else {
                 readyStateInterval = setInterval(function() {
-                    if (!K.window.document) {
+                    if (!self.window.document) {
                         return;
                     }
 
@@ -122,7 +125,7 @@ jQuery.extend(K, (function() {
                 }, 200);
             }
         } else {
-            K.$(K.window).bind({
+            jQuery(self.window).bind({
                 'load': onload
             });
         }
@@ -132,7 +135,7 @@ jQuery.extend(K, (function() {
         '$': jQuery.noConflict(),
 
         /**
-         * Wrapper for Syn, with predefined context = K.window.document.body
+         * Wrapper for Syn, with predefined context = self.window.document.body
          * {@link Syn} is a synthetic event generator
          * @see http://jupiterjs.com/news/syn-a-standalone-synthetic-event-library
          */
@@ -146,7 +149,7 @@ jQuery.extend(K, (function() {
                             args.push(this);
                         });
                         args[0] = args[0]?args[0]:{};
-                        args[1] = K.window.document.body;
+                        args[1] = self.window.document.body;
                         method.apply(Syn, args);
                     };
                 }
@@ -177,7 +180,7 @@ jQuery.extend(K, (function() {
     var unserialize = function(str){
         var chunks = str.split("&");
         var obj = {};
-        jQuery.each(chunks, function(key, value) {
+        kunit.$.each(chunks, function(key, value) {
             var spl = value.split("=");
             obj[spl[0]] = spl[1];
         });
