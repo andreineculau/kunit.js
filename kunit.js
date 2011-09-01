@@ -1,7 +1,7 @@
 /*global jQuery: true, window: true, Syn: true*/
 /*global ok: true, start: true, stop: true*/ // QUnit functions
 /*jslint browser:true, eqeqeq: true*/
-
+/*jshint browser:true, eqeqeq: true*/
 var kunit = function(selector, context){
     if(selector && selector.kunit === true){
         return selector;
