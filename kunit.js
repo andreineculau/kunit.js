@@ -80,53 +80,67 @@ jQuery.extend(kunit, (function(window, document, $) {
     };
 
     _open = function(src, successCallback) {
-        var readyStateInterval, onload, onunload, checkreadystate;
+        var w, readyStateInterval, onload, onunload, checkreadystate;
 
+        w = self.window;
         onload = function(e) {
             clearInterval(readyStateInterval);
-            self.window.document.documentElement.tabIndex = 0;
+            w.document.documentElement.tabIndex = 0;
             setTimeout(function() {
-                self.window.focus();
+                w.focus();
             }, 0);
-            $(self.window).unbind({
+            $(w).unbind({
                 'load': onload
             });
             _successCallback();
         };
 
         onunload = function(e) {
-            $(self.window).unbind({
+            $(w).unbind({
                 'load': onload,
                 'unload': onunload
             });
         };
 
         checkreadystate = function() {
-            if ((self.window.document.readyState === 'complete' ||
-                 self.window.document.readyState === 'loaded') &&
-                self.window.location.href !== 'about:blank') {
+            if ((w.document.readyState === 'complete' ||
+                 w.document.readyState === 'loaded') &&
+                w.location.href !== 'about:blank') {
                 onload();
             }
         };
 
-        if (self.window) {
-            self.window.location = src;
+        if (w) {
+            w.location = src;
         } else {
-            self.window = window.open(src, 'kunit');
+            if (kunit._hideTestWindow) {
+                w = document.createElement('IFRAME');
+                w.setAttribute('src', src);
+                w.setAttribute('id', 'pageUnderTest');
+                w.setAttribute('name', 'pageUnderTest');
+                w.setAttribute('style', 'visibility: hidden');
+                document.body.appendChild(w);
+                w.document = w.contentDocument;
+                w = w.contentWindow;
+                self.window = w;
+            } else {
+                w = window.open(src, 'kunit');
+                self.window = w;
+            }
         }
 
-        $(self.window).bind({
+        $(w).bind({
             'unload': onunload
         });
-        if ('readyState' in self.window.document) {
-            if ('onreadystatechange' in self.window.document &&
+        if ('readyState' in w.document) {
+            if ('onreadystatechange' in w.document &&
                 !$.browser.webkit // In webkit document.onreadystatechange is
                                   // never triggered.
                ) {
-                self.window.document.onreadystatechange = checkreadystate;
+                w.document.onreadystatechange = checkreadystate;
             } else {
                 readyStateInterval = setInterval(function() {
-                    if (!self.window.document) {
+                    if (!w.document) {
                         return;
                     }
 
@@ -134,7 +148,7 @@ jQuery.extend(kunit, (function(window, document, $) {
                 }, 200);
             }
         } else {
-            $(self.window).bind({
+            $(w).bind({
                 'load': onload
             });
         }
@@ -173,7 +187,7 @@ jQuery.extend(kunit, (function(window, document, $) {
         'timeBetweenOpen': 100,
 
         /**
-         * Open a new window / tab where the testcase at src is run.
+         * Open a new window / tab / iframe  where the testcase at src is run.
          * @param {String} src URL of testcase (js file)
          * @param {String} callback function to execute when loaded with success
          * @param {Number} timeout Time (ms) to wait before load fail error
@@ -209,4 +223,6 @@ jQuery.extend(kunit, (function(window, document, $) {
     script = document.createElement('SCRIPT');
     script.setAttribute('src', hash.test);
     window.document.getElementsByTagName('head')[0].appendChild(script);
+
+    kunit._hideTestWindow = hash.hidePage ? true : false;
 })();
