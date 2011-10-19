@@ -1,5 +1,5 @@
 /*global jQuery: true, window: true, Syn: true*/
-/*global ok: true, start: true, stop: true*/ // QUnit functions
+/*global ok: true, start: true, stop: true, equal: true*/ // QUnit functions
 /*jslint browser:true, eqeqeq: true*/
 /*jshint browser:true, eqeqeq: true*/
 var kunit = function(selector, context){
@@ -154,6 +154,13 @@ jQuery.extend(kunit, (function(window, document, $) {
         }
     };
 
+    /**
+     * @return {String} the type of an object
+     */
+    var _getType = function(obj) {
+        return Object.prototype.toString.call(obj).match(/\[object (.+)\]/)[1];
+    };
+
     return {
         '$': $.noConflict(),
 
@@ -205,7 +212,18 @@ jQuery.extend(kunit, (function(window, document, $) {
                 'timeout': timeout || 5000
                 //'timeoutCallback': function() {}
             });
+        },
+
+        /**
+         * Type check an object.
+         * @param {String} type The type/class (e.g. String, Array, Object)
+         * @param {mixed} obj The object to check
+         * @param {String} [msg] The information text for the assertion
+         */
+        is: function(type, obj, msg) {
+            equal(_getType(obj), type, msg);
         }
+
     };
 })(window, document, jQuery));
 
